@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: gitlab-ce
+  name: gitlab-ce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab-ce
+  template:
+    metadata:
+      labels:
+        app: gitlab-ce
+    spec:
+      containers:
+      - image: docker.io/gitlab/gitlab-ce:latest
+        imagePullPolicy: Always
+        name: gitlab-ce
+        ports:
+        - containerPort: 9090
+        env:
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: "external_url 'http://gitlab:9090';prometheus_monitoring['enable'] = false;nginx['proxy_set_headers'] = { 'X-Forwarded-Proto' => 'http', 'X-Forward-Port' => '9090', 'Host' => 'gitlab:9090' };puma['worker_processes'] = 0;sidekiq['max_concurrency'] = 10"
+        - name: HOSTNAME
+          value: gitlab
+        - name: GITLAB_ROOT_PASSWORD
+          value: P@ssw0rd!
+        # volumeMounts:
+        # - mountPath: /etc/gitlab
+        #   name: configuration-data
+        # - mountPath: /var/log/gitlab
+        #   name: logs-data
+        # - mountPath: /var/opt/gitlab
+        #   name: application-data
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      # nodeSelector:
+      #   kubernetes.io/arch: amd64
+      # volumes:
+      # - name: configuration-data
+      #   hostPath:
+      #     # directory location on host
+      #     path: /foo/etc/gitlab
+      #     # this field is optional
+      #     type: Directory  
+      # - name: logs-data
+      #   hostPath:
+      #     # directory location on host
+      #     path: /foo/var/log/gitlab
+      #     # this field is optional
+      #     type: Directory  
+      # - name: application-data
+      #   hostPath:
+      #     # directory location on host
+      #     path: /foo/opt/gitlab
+      #     # this field is optional
+      #     type: Directory  
